@@ -4,16 +4,19 @@ import {
   UploadedFile,
   UseInterceptors,
   HttpCode,
+  Render,
+  Get,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { promises as fsPromises } from 'fs';
-import { existsSync, mkdirSync } from 'fs';
+
+import { promises as fsPromises, existsSync, mkdirSync, readdirSync } from 'fs';
 import { join } from 'path';
 
 @ApiTags('upload')
 @Controller('upload')
 export class UploadController {
+  private readonly dirPath = join(__dirname, '..', '..', 'uploads');
   @Post()
   @HttpCode(200)
   @ApiConsumes('multipart/form-data')
@@ -44,5 +47,35 @@ export class UploadController {
       status: 'success',
       message: 'File uploaded successfully',
     };
+  }
+  @Get()
+  @ApiOperation({ summary: 'Get all uploaded files' })
+  getAllFiles(): any {
+    if (!existsSync(this.dirPath)) {
+      return {
+        status: 'error',
+        message: 'No files have been uploaded yet',
+      };
+    }
+
+    const fileNames = readdirSync(this.dirPath);
+    return {
+      status: 'success',
+      files: fileNames,
+    };
+  }
+}
+@Controller('gallery')
+export class GalleryController {
+  private readonly dirPath = join(__dirname, '..', '..', 'uploads');
+
+  @Get()
+  @Render('gallery')
+  displayGallery() {
+    let files = [];
+    if (existsSync(this.dirPath)) {
+      files = readdirSync(this.dirPath);
+    }
+    return { files };
   }
 }

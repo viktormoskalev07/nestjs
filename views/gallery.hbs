@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Photo Gallery</title>
+</head>
+<body>
+<h1>Photo Gallery</h1>
+<div>
+  {{#each files}}
+    <img src="/uploads/{{this}}" alt="{{this}}" width="200">
+  {{/each}}
+</div>
+</body>
+</html>
