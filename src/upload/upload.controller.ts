@@ -5,10 +5,12 @@ import {
   UseInterceptors,
   HttpCode,
   Render,
-  Get,
+  Get, Body
 } from '@nestjs/common';
+import { HttpException, HttpStatus } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+ 
 
 import { promises as fsPromises, existsSync, mkdirSync, readdirSync } from 'fs';
 import { join } from 'path';
@@ -16,6 +18,7 @@ import { join } from 'path';
 @ApiTags('upload')
 @Controller('upload')
 export class UploadController {
+ 
   private readonly dirPath = join(__dirname, '..', '..', 'uploads');
   @Post()
   @HttpCode(200)
@@ -35,12 +38,14 @@ export class UploadController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile() file): Promise<any> {
     const dirPath = join(__dirname, '..', '..', 'uploads');
-
+    console.log("request")
     if (!existsSync(dirPath)) {
       mkdirSync(dirPath);
     }
-
-    const filePath = join(dirPath, file.originalname);
+if(!file){
+  throw new HttpException('File is missing', HttpStatus.BAD_REQUEST);
+}
+    const filePath = join(dirPath, file?.originalname);
 
     await fsPromises.writeFile(filePath, file.buffer);
     return {
@@ -72,10 +77,24 @@ export class GalleryController {
   @Get()
   @Render('gallery')
   displayGallery() {
+    console.log(9)
     let files = [];
     if (existsSync(this.dirPath)) {
       files = readdirSync(this.dirPath);
     }
     return { files };
+  }
+}
+
+
+@Controller('log')
+export class LogController {
+  @Post('body')
+  logRequestBody(@Body() body: any): any {
+    console.log("Тело POST-запроса:", body);
+    return {
+      status: 'success',
+      message: 'Тело запроса выведено в консоль',
+    };
   }
 }
